@@ -16,20 +16,44 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        /* * ==============================================
+         * Theme Variables & Theming Logic
+         * ==============================================
+         * Default theme is dark. The .light-theme class on the <html> element
+         * overrides these variables for the light theme.
+        */
         :root {
             --color-primary: #BB86FC;
             --color-secondary: #03DAC5;
             --color-background: #0A0F1A;
             --color-surface: #1A2333;
+            --color-surface-alpha-06: rgba(26, 35, 51, 0.6);
+            --color-surface-alpha-03: rgba(26, 35, 51, 0.3);
             --color-on-primary: #000000;
-            --color-on-secondary: #000000;
             --color-on-background: #E0E0E0;
             --color-on-surface: #E0E0E0;
             --color-on-surface-variant: rgba(224, 224, 224, 0.7);
             --color-error: #CF6679;
-            --color-surface-alpha-06: rgba(26, 35, 51, 0.6);
-            --color-surface-alpha-03: rgba(26, 35, 51, 0.3);
             --color-grid: rgba(224, 224, 224, 0.1);
+            --color-shadow: rgba(0, 0, 0, 0.2);
+            --color-border: rgba(255, 255, 255, 0.1);
+        }
+
+        html.light-theme {
+            --color-primary: #6D28D9;
+            --color-secondary: #047857;
+            --color-background: #F3F4F6;
+            --color-surface: #FFFFFF;
+            --color-surface-alpha-06: rgba(255, 255, 255, 0.6);
+            --color-surface-alpha-03: rgba(255, 255, 255, 0.3);
+            --color-on-primary: #FFFFFF;
+            --color-on-background: #1F2937;
+            --color-on-surface: #111827;
+            --color-on-surface-variant: rgba(17, 24, 39, 0.7);
+            --color-error: #B91C1C;
+            --color-grid: rgba(0, 0, 0, 0.1);
+            --color-shadow: rgba(99, 102, 241, 0.1);
+            --color-border: rgba(0, 0, 0, 0.1);
         }
 
         body {
@@ -39,6 +63,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .background-gradient {
@@ -49,18 +74,25 @@
             width: 100%;
             height: 100%;
             z-index: -1;
+            transition: background 0.3s ease;
+        }
+        
+        html.light-theme .card-surface-gradient {
+            background: var(--color-surface);
         }
 
         .card-surface-gradient {
             background: linear-gradient(135deg, rgba(44, 62, 80, 0.5) 0%, rgba(26, 35, 51, 0.7) 100%);
+            transition: background 0.3s ease;
         }
 
         .dashboard-card {
             background-color: transparent;
             border-radius: 0.75rem; 
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px var(--color-shadow);
             padding: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--color-border);
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
         }
 
         .tab-button {
@@ -108,6 +140,7 @@
             overflow: hidden;
             border: 2px solid;
             box-sizing: border-box; 
+            transition: border-color 0.3s ease;
         }
 
         .chiller-status-circle.running::before {
@@ -154,7 +187,7 @@
             overflow-y: auto;
             position: relative;
             transform: translateY(-20px);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, background-color 0.3s ease;
         }
         .modal-overlay.visible .modal-content {
             transform: translateY(0);
@@ -173,7 +206,7 @@
         }
         /* Simple spinner */
         .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.2);
+            border: 4px solid rgba(128, 128, 128, 0.2);
             border-left-color: var(--color-primary);
             border-radius: 50%;
             width: 40px;
@@ -189,9 +222,13 @@
 <body class="flex flex-col">
     <div class="background-gradient"></div>
     <!-- Header -->
-    <header class="bg-[var(--color-surface-alpha-06)] p-4 shadow-lg z-10">
+    <header class="bg-[var(--color-surface-alpha-06)] backdrop-blur-sm p-4 shadow-lg z-10 sticky top-0">
         <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-bold">Chiller Dashboard <span class="text-[var(--color-primary)]">2.0</span></h1>
+             <!-- Theme Toggle Button -->
+            <button id="theme-toggle" class="p-2 rounded-full hover:bg-[var(--color-surface)] transition-colors duration-300">
+                <i id="theme-icon" data-lucide="moon" class="text-[var(--color-on-background)]"></i>
+            </button>
         </div>
     </header>
 
@@ -209,7 +246,7 @@
                 <span id="mode-text" class="text-[var(--color-on-surface)] text-sm font-medium">Mode: Daily Simulation</span>
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" id="mode-switch" class="sr-only peer">
-                    <div class="w-11 h-6 bg-[var(--color-surface-alpha-03)] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
+                    <div class="w-11 h-6 bg-[var(--color-surface-alpha-03)] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
                 </label>
             </div>
         </div>
@@ -376,7 +413,7 @@
                                 <th class="py-3 px-4 text-left text-xs font-medium uppercase text-[var(--color-on-surface-variant)]">Evap Leaving (°C)</th>
                             </tr>
                         </thead>
-                        <tbody id="cooling-demand-table-body" class="divide-y divide-gray-700">
+                        <tbody id="cooling-demand-table-body" class="divide-y divide-[var(--color-border)]">
                             <tr><td colspan="3" class="text-center py-4">Loading...</td></tr>
                         </tbody>
                     </table>
@@ -387,7 +424,7 @@
     
     <!-- Gemini Modal -->
     <div id="gemini-modal" class="modal-overlay">
-        <div class="modal-content card-surface-gradient">
+        <div class="modal-content">
             <button class="modal-close-btn" onclick="hideGeminiModal()">
                 <i data-lucide="x" class="text-[var(--color-on-surface-variant)]"></i>
             </button>
@@ -401,11 +438,12 @@
 
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-gray-400 p-4 text-center text-sm z-10 mt-auto">
+    <footer class="bg-[var(--color-surface)] text-[var(--color-on-surface-variant)] p-4 text-center text-sm z-10 mt-auto transition-colors duration-300">
         <div class="container mx-auto">&copy; 2025 Chiller Monitoring System.</div>
     </footer>
 
     <script>
+        // --- Data URLs and Global Variables ---
         var chillerDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGxKeWAmp1w2vjkQE0tQJKLdm4ZzwLsKgpxRRJUmUerdwnvgXgk2K2XnVKSqwdlEmGSm8NPy9fi_9v/pub?output=csv";
         var chillerManualDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTR3MeUBIM52Nv9zn2fQB0ZHWBCubIkRU8AuE5voSHKZGdXgiTGYkD2Vc4JLKpYEMl7oWau--fLRkTb/pub?output=csv";
         var coolingDemandUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSmEQNOaibA1Mbe-3nNWvQPrtDWwIoueQs1FaXuj3UDznWCrI17WE1_rUMdUVHS6RN29NyEPNbhINt2/pub?output=csv";
@@ -422,6 +460,63 @@
 4:00 PM,10.19,285.936592,238.06353261,339.99987522,200.769864330564,177.873206934523,182.749997908137,863.99999983,607.8,561.39
 5:00 PM,9.83,268.22831245,203.54230543,338.22938234,194.254050423959,151.272634354727,182.727557986051,810.00000022,580.56,528.25`;
         
+        // --- Theme Management ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const docElement = document.documentElement;
+
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                docElement.classList.add('light-theme');
+                themeIcon.setAttribute('data-lucide', 'sun');
+            } else {
+                docElement.classList.remove('light-theme');
+                themeIcon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+            updateChartsTheme();
+        }
+
+        function toggleTheme() {
+            const currentTheme = docElement.classList.contains('light-theme') ? 'light' : 'dark';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('chiller-theme', newTheme);
+            applyTheme(newTheme);
+        }
+
+        function getChartThemeOptions() {
+            const isLightTheme = docElement.classList.contains('light-theme');
+            return {
+                textColor: isLightTheme ? 'rgba(17, 24, 39, 0.7)' : 'rgba(224, 224, 224, 0.7)',
+                gridColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(224, 224, 224, 0.1)',
+                titleColor: isLightTheme ? '#111827' : '#E0E0E0',
+                doughnutBorderColor: isLightTheme ? '#F3F4F6' : '#0A0F1A',
+                centerTextColor: isLightTheme ? '#111827' : '#E0E0E0',
+                centerTextVariantColor: isLightTheme ? 'rgba(17, 24, 39, 0.7)' : 'rgba(224, 224, 224, 0.7)',
+            };
+        }
+
+        function updateChartsTheme() {
+            const themeOptions = getChartThemeOptions();
+            if (dailyPerformanceChartInstance) {
+                dailyPerformanceChartInstance.options.plugins.title.color = themeOptions.titleColor;
+                dailyPerformanceChartInstance.options.plugins.legend.labels.color = themeOptions.textColor;
+                dailyPerformanceChartInstance.options.plugins.datalabels.color = themeOptions.titleColor;
+                dailyPerformanceChartInstance.options.scales.x.grid.color = themeOptions.gridColor;
+                dailyPerformanceChartInstance.options.scales.x.ticks.color = themeOptions.textColor;
+                dailyPerformanceChartInstance.options.scales.y.grid.color = themeOptions.gridColor;
+                dailyPerformanceChartInstance.options.scales.y.ticks.color = themeOptions.textColor;
+                dailyPerformanceChartInstance.options.scales.y.title.color = themeOptions.textColor;
+                dailyPerformanceChartInstance.update('none');
+            }
+            if (loadDistributionChartInstance) {
+                // Redrawing the doughnut chart is the most reliable way to update all its custom elements
+                if (document.getElementById('tab-content-1').offsetParent !== null) {
+                    setupLoadDistributionChart(true);
+                }
+            }
+        }
+
         // --- Gemini API ---
         async function callGeminiAPI(prompt) {
             const modalTitle = document.getElementById('gemini-modal-title');
@@ -489,6 +584,7 @@
         function handleKpiInsights() {
             const efficiencyValue = document.getElementById('kpi-efficiency').textContent;
             if (!efficiencyValue || efficiencyValue.includes('--')) {
+                // Using a custom modal/alert would be better, but for simplicity:
                 alert("Please wait for KPI data to load before getting insights.");
                 return;
             }
@@ -539,7 +635,7 @@
             updateMetricsTab();
             updateCoolingDemandTableTab();
             if(document.getElementById('tab-content-1').offsetParent !== null) {
-                 setupLoadDistributionChart();
+                 setupLoadDistributionChart(true);
             }
         }
 
@@ -547,9 +643,10 @@
             const latestData = sheetData[sheetData.length - 1] || {};
             const getStatus = (power) => {
                 const p = parseFloat(power);
-                if (isNaN(p) || p <= 0) return { text: "OFF", color: "var(--color-secondary)", running: false };
+                const isLightTheme = docElement.classList.contains('light-theme');
+                if (isNaN(p) || p <= 0) return { text: "OFF", color: isLightTheme ? "#047857" : "var(--color-secondary)", running: false };
                 if (p > 1.0) return { text: "RUNNING", color: "var(--color-primary)", running: true };
-                return { text: "STANDBY", color: "var(--color-secondary)", running: false };
+                return { text: "STANDBY", color: isLightTheme ? "#047857" : "var(--color-secondary)", running: false };
             };
             
             ['1', '2', '3'].forEach(i => {
@@ -619,9 +716,26 @@
             });
         }
 
-        function setupLoadDistributionChart() {
+        function setupLoadDistributionChart(forceUpdate = false) {
             const ctx = document.getElementById('loadDistributionChart');
             if(!ctx) return;
+
+            if(forceUpdate && loadDistributionChartInstance) {
+                loadDistributionChartInstance.destroy();
+                loadDistributionChartInstance = null;
+            } else if (loadDistributionChartInstance) {
+                // If not forcing update, just update data for performance
+                 const latestData = sheetData[sheetData.length - 1] || {};
+                 const loads = [
+                    parseFloat(latestData['out_C1Load'] || 0),
+                    parseFloat(latestData['out_C2Load'] || 0),
+                    parseFloat(latestData['out_C3Load'] || 0)
+                ];
+                loadDistributionChartInstance.data.datasets[0].data = loads;
+                loadDistributionChartInstance.update();
+                return;
+            }
+
             const latestData = sheetData[sheetData.length - 1] || {};
             const loads = [
                 parseFloat(latestData['out_C1Load'] || 0),
@@ -631,13 +745,15 @@
             const totalLoad = loads.reduce((a, b) => a + b, 0);
             
             document.getElementById('donut-subtitle').textContent = `Current Hour | Share of Total Load (${totalLoad.toFixed(2)} RT)`;
+            
+            const themeOptions = getChartThemeOptions();
 
             const data = {
                 labels: ['Chiller 1', 'Chiller 2', 'Chiller 3'],
                 datasets: [{
                     data: loads,
                     backgroundColor: [ '#BB86FC', '#03DAC5', '#CF6679' ],
-                    borderColor: '#0A0F1A',
+                    borderColor: themeOptions.doughnutBorderColor,
                     borderWidth: 2,
                     offset: loads.map(load => load === Math.max(...loads) ? 10 : 0),
                 }]
@@ -647,45 +763,19 @@
                 id: 'centerText',
                 afterDraw: (chart) => {
                     const {ctx, chartArea: {top, bottom, left, right, width, height}} = chart;
+                    const theme = getChartThemeOptions();
                     ctx.save();
                     ctx.font = 'bold 24px Inter';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillStyle = '#E0E0E0';
+                    ctx.fillStyle = theme.centerTextColor;
                     ctx.fillText(`${totalLoad.toFixed(1)}`, width / 2, top + (height / 2) - 10);
                     ctx.font = '14px Inter';
-                    ctx.fillStyle = 'rgba(224, 224, 224, 0.7)';
+                    ctx.fillStyle = theme.centerTextVariantColor;
                     ctx.fillText('Total RT', width / 2, top + (height / 2) + 15);
                     ctx.restore();
                 }
             };
-            
-            if(loadDistributionChartInstance) {
-                loadDistributionChartInstance.data = data;
-                loadDistributionChartInstance.options.plugins.legend.labels.generateLabels = function(chart) {
-                     const data = chart.data;
-                     if (data.labels.length && data.datasets.length) {
-                         const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
-                         return data.labels.map((label, i) => {
-                             const meta = chart.getDatasetMeta(0);
-                             const style = meta.controller.getStyle(i);
-                             const value = chart.data.datasets[0].data[i];
-                             const percentage = total > 0 ? (value / total * 100).toFixed(1) + '%' : '0.0%';
-                             return {
-                                 text: `${label} (${percentage})`,
-                                 fillStyle: style.backgroundColor,
-                                 strokeStyle: style.borderColor,
-                                 lineWidth: style.borderWidth,
-                                 hidden: isNaN(value) || meta.data[i].hidden,
-                                 index: i
-                             };
-                         });
-                     }
-                     return [];
-                };
-                loadDistributionChartInstance.update();
-                return;
-            }
             
             Chart.register(ChartDataLabels);
 
@@ -712,7 +802,7 @@
                             display: true,
                             position: 'bottom',
                             labels: {
-                                color: 'rgba(224, 224, 224, 0.7)',
+                                color: themeOptions.textColor,
                                 boxWidth: 15,
                                 padding: 20,
                                 generateLabels: function(chart) {
@@ -760,6 +850,7 @@
             if (dailyPerformanceChartInstance) dailyPerformanceChartInstance.destroy();
             
             Chart.register(ChartDataLabels);
+            const themeOptions = getChartThemeOptions();
 
             const parseTime = (timeStr) => {
                 const [time, modifier] = timeStr.split(' ');
@@ -785,24 +876,22 @@
                     plugins: {
                         datalabels: {
                            display: true,
-                           color: '#E0E0E0',
+                           color: themeOptions.titleColor,
                            align: 'top',
                            anchor: 'end',
                            offset: 8,
-                           font: {
-                            weight: 'bold'
-                           },
+                           font: { weight: 'bold' },
                            formatter: (value) => value.toFixed(1)
                         },
-                        title: { display: true, text: 'Comparison of Power Consumption', color: '#E0E0E0', font: { size: 20, weight: '600' } },
-                        legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, color: 'rgba(224, 224, 224, 0.7)' } }
+                        title: { display: true, text: 'Comparison of Power Consumption', color: themeOptions.titleColor, font: { size: 20, weight: '600' } },
+                        legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, color: themeOptions.textColor } }
                     },
                     scales: {
-                        x: { type: 'time', time: { unit: 'hour', tooltipFormat: 'h:mm a', displayFormats: { hour: 'h a' } }, grid: { drawBorder: false, color: 'rgba(224, 224, 224, 0.1)' }, ticks: { color: 'rgba(224, 224, 224, 0.7)' } },
+                        x: { type: 'time', time: { unit: 'hour', tooltipFormat: 'h:mm a', displayFormats: { hour: 'h a' } }, grid: { drawBorder: false, color: themeOptions.gridColor }, ticks: { color: themeOptions.textColor } },
                         y: { 
-                            title: { display: true, text: 'Total Power Consumption (kW)', color: 'rgba(224, 224, 224, 0.7)', font: {weight: 'bold'} }, 
-                            grid: { border: { dash: [4, 4] }, color: 'rgba(224, 224, 224, 0.1)' }, 
-                            ticks: { color: 'rgba(224, 224, 224, 0.7)' } 
+                            title: { display: true, text: 'Total Power Consumption (kW)', color: themeOptions.textColor, font: {weight: 'bold'} }, 
+                            grid: { border: { dash: [4, 4] }, color: themeOptions.gridColor }, 
+                            ticks: { color: themeOptions.textColor } 
                         }
                     }
                 }
@@ -866,7 +955,12 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            lucide.createIcons();
+            // Apply saved theme or default to dark
+            const savedTheme = localStorage.getItem('chiller-theme') || 'dark';
+            applyTheme(savedTheme);
+
+            // Set up theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
             
             document.getElementById('mode-switch').addEventListener('change', async (event) => {
                 isManualMode = event.target.checked;
